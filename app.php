@@ -97,43 +97,46 @@ function country_code($number, $array, $j = 2, $code_last = 'zz', $dial_code_arr
 
 function get_email($get_email){ if($get_email == ''){ return null; } else { return $get_email; } }
 
-//echo count($error);
-//exit();
+
+if(empty($tmpdata['method'])){ $tmpdata['method'] = 'get'; }
+
 
 if(isset($tmpdata)){
+		
+	// подключение к db
+	$db_host     = 'db';
+	$db_name     = 'db_sdfs';
+	$db_tab      = 'db_sdfs_tab';
+	$db_login    = 'db_sdfs_user';
+	$db_password = 'db_sdfs_pass';
+	
+
+	//
+	try {
+		$conn = new PDO("mysql:host=$db_host", $db_login, $db_password);
+		$sql0 = "CREATE DATABASE IF NOT EXISTS $db_name";
+		$conn->exec($sql0);
+	} catch (PDOException $e) {
+		exit("ошибка create database: " . $e->getMessage());
+	}
+
+	try {
+		$pdo_connect = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_login, $db_password);
+		$sql1 = "create table IF NOT EXISTS $db_tab (
+			id integer auto_increment primary key,
+			name varchar(100),
+			surname varchar(100),
+			email varchar(256) unique,
+			number varchar(100) unique,
+			country varchar(10)
+		);";
+		$pdo_connect->exec($sql1);
+	} catch (PDOException $e) {
+		exit("ошибка create table: " . $e->getMessage());
+	}
 
 	if(isset($tmpdata['method']) && $tmpdata['method'] != '' && isset($tmpdata['number']) && $tmpdata['number'] != '' && substr($tmpdata['number'], 0, 1) == '+' && is_numeric(substr($tmpdata['number'], 1, strlen($tmpdata['number'])))){
-		
-		// подключение к db
-		$db_host     = 'db';
-		$db_name     = 'db_sdfs';
-		$db_tab      = 'db_sdfs_tab';
-		$db_login    = 'db_sdfs_user';
-		$db_password = 'db_sdfs_pass';
 
-		//
-		try {
-			$conn = new PDO("mysql:host=$db_host", $db_login, $db_password);
-			$sql0 = "CREATE DATABASE IF NOT EXISTS $db_name";
-			$conn->exec($sql0);
-		} catch (PDOException $e) {
-			exit("ошибка create database: " . $e->getMessage());
-		}
-
-		try {
-			$pdo_connect = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_login, $db_password);
-			$sql1 = "create table IF NOT EXISTS $db_tab (
-				id integer auto_increment primary key,
-				name varchar(100),
-				surname varchar(100),
-				email varchar(256) unique,
-				number varchar(100) unique,
-				country varchar(10)
-			);";
-			$pdo_connect->exec($sql1);
-		} catch (PDOException $e) {
-			exit("ошибка create table: " . $e->getMessage());
-		}
 		
 		// переменная number
 		$get_number  = $tmpdata['number'];
@@ -256,12 +259,23 @@ if(isset($tmpdata)){
 
 	} else {
 
-		if(empty($tmpdata['method']) || $tmpdata['method'] == ''){
-			array_push($error, 'неправильный метод');
-		}
+		if(isset($tmpdata['method']) && $tmpdata['method'] == 'get'){
+
+			$stmt = $pdo_connect->prepare("SELECT * FROM $db_tab WHERE id>? ORDER BY id DESC LIMIT 10");
+			$stmt->execute([0]); 
+			$base = $stmt->fetch(PDO::FETCH_ASSOC);
+			$text = array('result' => $base);
+
+		} else {
+
+			if(empty($tmpdata['method']) || $tmpdata['method'] == ''){
+				array_push($error, 'неправильный метод');
+			}
+			
+			if(empty($tmpdata['number']) || $tmpdata['number'] == '' || !substr($tmpdata['number'], 0, 1) == '+' || !is_numeric(substr($tmpdata['number'], 1, count($tmpdata['number'])))){
+				array_push($error, 'неправильный номер');
+			}
 		
-		if(empty($tmpdata['number']) || $tmpdata['number'] == '' || !substr($tmpdata['number'], 0, 1) == '+' || !is_numeric(substr($tmpdata['number'], 1, count($tmpdata['number'])))){
-			array_push($error, 'неправильный номер');
 		}
 	}
 	
