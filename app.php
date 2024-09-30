@@ -33,7 +33,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-
 // получение данных
 $data_input = file_get_contents("php://input");
 
@@ -272,5 +271,10 @@ if(isset($tmpdata)){
 if(count($error) > 0){ array_unshift($text, $error); }
 
 echo json_encode($text, JSON_UNESCAPED_UNICODE)."\n";
+
+//xdebug
+echo 'time: '.xdebug_time_index()."\n";
+
+echo 'memory: '.xdebug_memory_usage()."\n";
 
 ?>

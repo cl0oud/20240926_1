@@ -13,6 +13,7 @@ services:
   db:
     image: mariadb:10.9
     environment:
+      MYSQL_ROOT_PASSWORD: 'root_password'
       MYSQL_DATABASE: 'db_sdfs'
       MYSQL_USER: 'db_sdfs_user'
       MYSQL_PASSWORD: 'db_sdfs_pass'
